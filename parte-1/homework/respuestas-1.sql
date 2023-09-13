@@ -107,6 +107,14 @@ select store, total_discount/total_sale * 100
 from cte1
 
 -- 8. Cual es el inventario promedio por dia que tiene cada tienda?
+with cte1 as
+
+(select store_id, sum(initial) as total_initial, sum(final)as total_final
+from stg.inventory
+group by store_id)
+
+select store_id, (total_initial + total_final)/2 as avg
+from cte1
 
 -- 9. Obtener las ventas netas y el porcentaje de descuento otorgado por producto en Argentina.
 
