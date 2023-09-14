@@ -117,6 +117,14 @@ select store_id, (total_initial + total_final)/2 as avg
 from cte1
 
 -- 9. Obtener las ventas netas y el porcentaje de descuento otorgado por producto en Argentina.
+WITH CTE1 AS (
+	select sale -  coalesce(promotion,0) as ventas_netas
+, promotion/sale as descuento
+from stg.order_line_sale
+where currency = 'ARS')
+
+SELECT VENTAS_NETAS, COALESCE(DESCUENTO,0)
+FROM CTE1
 
 -- 10. Las tablas "market_count" y "super_store_count" representan dos sistemas distintos que usa la empresa para contar la cantidad de gente que ingresa a tienda, uno para las tiendas de Latinoamerica y otro para Europa. Obtener en una unica tabla, las entradas a tienda de ambos sistemas.
 
