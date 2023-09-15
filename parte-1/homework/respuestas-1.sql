@@ -129,12 +129,36 @@ FROM CTE1
 -- 10. Las tablas "market_count" y "super_store_count" representan dos sistemas distintos que usa la empresa para contar la cantidad de gente que ingresa a tienda, uno para las tiendas de Latinoamerica y otro para Europa. Obtener en una unica tabla, las entradas a tienda de ambos sistemas.
 
 -- 11. Cuales son los productos disponibles para la venta (activos) de la marca Phillips?
+select product_code, name 
+from stg.product_master
+where is_active = true
+and name like '%PHILIPS%'
 
 -- 12. Obtener el monto vendido por tienda y moneda y ordenarlo de mayor a menor por valor nominal de las ventas (sin importar la moneda).
+select store, currency, sum(sale)
+from stg.order_line_sale
+group by 1,2
+order by sum desc
 
 -- 13. Cual es el precio promedio de venta de cada producto en las distintas monedas? Recorda que los valores de venta, impuesto, descuentos y creditos es por el total de la linea.
+with cte1 as(
+	
+select product, currency, sum(sale) as venta, count(product) as cuenta
+from stg.order_line_sale
+group by 1,2)
+
+select product, currency, venta/cuenta as precio_promedio
+from cte1
+order by currency desc
 
 -- 14. Cual es la tasa de impuestos que se pago por cada orden de venta?
+with cte1 as(
+	
+select order_number, sale, coalesce(tax,0) as tax
+from stg.order_line_sale)
+
+select order_number, tax/sale * 100 as tax_rate
+from cte1
 
 
 -- ## Semana 2 - Parte A
