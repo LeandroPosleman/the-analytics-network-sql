@@ -164,13 +164,36 @@ from cte1
 -- ## Semana 2 - Parte A
 
 -- 1. Mostrar nombre y codigo de producto, categoria y color para todos los productos de la marca Philips y Samsung, mostrando la leyenda "Unknown" cuando no hay un color disponible
+select name, product_code, category, COALESCE(color, 'Unknown')
+from stg.product_master
+where name like '%PHILIPS%'
+or name like '%SAMSUNG%'
 
 -- 2. Calcular las ventas brutas y los impuestos pagados por pais y provincia en la moneda correspondiente.
+select country, province, currency, sum(sale) as total_sales, sum(tax) as total_taxes
+from stg.order_line_sale ols
+left join stg.store_master sm
+on ols.store = sm.store_id
+group by 1,2,3
 
 -- 3. Calcular las ventas totales por subcategoria de producto para cada moneda ordenados por subcategoria y moneda.
-  
+select subcategory, currency, sum(sale) as total_sales
+from stg.order_line_sale ols
+left join stg.product_master pm
+on ols.product = pm.product_code
+group by 1,2
+order by 1,2
+
 -- 4. Calcular las unidades vendidas por subcategoria de producto y la concatenacion de pais, provincia; usar guion como separador y usarla para ordernar el resultado.
-  
+select subcategory, country || '-' || province AS pais_provincia ,count(product_code) as total_sales
+from stg.product_master pm
+left join stg.order_line_sale ols
+	on  pm.product_code = ols.product
+left join stg.store_master sm
+	on ols.store = sm.store_id
+group by 1,2
+order by pais_provincia asc, total_sales desc 
+
 -- 5. Mostrar una vista donde sea vea el nombre de tienda y la cantidad de entradas de personas que hubo desde la fecha de apertura para el sistema "super_store".
   
 -- 6. Cual es el nivel de inventario promedio en cada mes a nivel de codigo de producto y tienda; mostrar el resultado con el nombre de la tienda.
