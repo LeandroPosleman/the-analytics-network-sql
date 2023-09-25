@@ -127,7 +127,11 @@ SELECT VENTAS_NETAS, COALESCE(DESCUENTO,0)
 FROM CTE1
 
 -- 10. Las tablas "market_count" y "super_store_count" representan dos sistemas distintos que usa la empresa para contar la cantidad de gente que ingresa a tienda, uno para las tiendas de Latinoamerica y otro para Europa. Obtener en una unica tabla, las entradas a tienda de ambos sistemas.
-
+SELECT store_id, TO_DATE(CAST(date AS VARCHAR), 'YYYYMMDD'),  traffic
+FROM stg.market_count
+UNION
+SELECT store_id, TO_DATE(date, 'YYYY-MM-DD'), traffic
+	FROM stg.super_store_count;
 -- 11. Cuales son los productos disponibles para la venta (activos) de la marca Phillips?
 select product_code, name 
 from stg.product_master
@@ -195,7 +199,13 @@ group by 1,2
 order by pais_provincia asc, total_sales desc 
 
 -- 5. Mostrar una vista donde sea vea el nombre de tienda y la cantidad de entradas de personas que hubo desde la fecha de apertura para el sistema "super_store".
-  
+CREATE VIEW entrada_de_personas as
+
+SELECT ssc.store_id, sum(traffic)
+FROM stg.super_store_count ssc
+LEFT JOIN stg.store_master ssm
+ON ssc.store_id = ssm.store_id
+GROUP BY ssc.store_id
 -- 6. Cual es el nivel de inventario promedio en cada mes a nivel de codigo de producto y tienda; mostrar el resultado con el nombre de la tienda.
   
 -- 7. Calcular la cantidad de unidades vendidas por material. Para los productos que no tengan material usar 'Unknown', homogeneizar los textos si es necesario.
