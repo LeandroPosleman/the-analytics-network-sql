@@ -296,7 +296,16 @@ SELECT *
 FROM stg.product_master
   
 -- 2. Hacer un update a la nueva tabla (creada en el punto anterior) de product_master agregando la leyendo "N/A" para los valores null de material y color. Pueden utilizarse dos sentencias.
-  
+ -- material
+UPDATE bkp.bkp_product_master_20230926
+SET material = 'N/A' 
+WHERE material is null
+
+-- color
+UPDATE bkp.bkp_product_master_20230926
+SET color = 'N/A' 
+WHERE color is null
+
 -- 3. Hacer un update a la tabla del punto anterior, actualizando la columa "is_active", desactivando todos los productos en la subsubcategoria "Control Remoto".
   
 -- 4. Agregar una nueva columna a la tabla anterior llamada "is_local" indicando los productos producidos en Argentina y fuera de Argentina.
