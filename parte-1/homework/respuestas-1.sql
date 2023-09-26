@@ -233,13 +233,13 @@ group by store_id
 		on date_trunc('month',ols.date) = fx.month)
 		
 select order_number,
-	CASE WHEN currency = 'ARS' THEN sale * fx_rate_usd_peso
-	WHEN currency = 'URU' THEN sale * fx_rate_usd_uru
-	ELSE sale * fx_rate_usd_eur END AS venta_en_usd
+	CASE WHEN currency = 'ARS' THEN sale/fx_rate_usd_peso
+	WHEN currency = 'URU' THEN sale/fx_rate_usd_uru
+	ELSE sale/fx_rate_usd_eur END AS venta_en_usd
 FROM cte1
 
 -- 9. Calcular cantidad de ventas totales de la empresa en dolares.
-  with cte1 as
+ with cte1 as
 
 (select order_number, sale, currency, fx_rate_usd_peso, fx_rate_usd_uru, fx_rate_usd_eur
 	from stg.order_line_sale ols
@@ -248,9 +248,9 @@ FROM cte1
 		
 cte2 as
 (select order_number,
-	CASE WHEN currency = 'ARS' THEN sale * fx_rate_usd_peso
-	WHEN currency = 'URU' THEN sale * fx_rate_usd_uru
-	ELSE sale * fx_rate_usd_eur END AS venta_en_usd
+	CASE WHEN currency = 'ARS' THEN sale/fx_rate_usd_peso
+	WHEN currency = 'URU' THEN sale/fx_rate_usd_uru
+	ELSE sale/fx_rate_usd_eur END AS venta_en_usd
 FROM cte1)
 
 select sum(venta_en_usd) as venta_total_usd
@@ -268,9 +268,9 @@ select ols.order_number, sale, currency, fx_rate_usd_peso, fx_rate_usd_uru, fx_r
 
 cte2 as
 (select order_number, 
-	CASE WHEN currency = 'ARS' THEN sale * fx_rate_usd_peso 
-	WHEN currency = 'URU' THEN sale * fx_rate_usd_uru
-	ELSE sale * fx_rate_usd_eur END AS venta_en_usd,
+	CASE WHEN currency = 'ARS' THEN sale/fx_rate_usd_peso 
+	WHEN currency = 'URU' THEN sale/fx_rate_usd_uru
+	ELSE sale/fx_rate_usd_eur END AS venta_en_usd,
 	product_cost_usd
 	from cte1)
 	
