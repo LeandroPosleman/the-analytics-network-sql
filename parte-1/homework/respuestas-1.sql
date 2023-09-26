@@ -289,6 +289,11 @@ order by count desc
 -- ## Semana 2 - Parte B
 
 -- 1. Crear un backup de la tabla product_master. Utilizar un esquema llamada "bkp" y agregar un prefijo al nombre de la tabla con la fecha del backup en forma de numero entero.
+CREATE SCHEMA IF NOT EXISTS bkp;
+
+CREATE TABLE bkp.bkp_product_master_20230926 AS
+SELECT *
+FROM stg.product_master
   
 -- 2. Hacer un update a la nueva tabla (creada en el punto anterior) de product_master agregando la leyendo "N/A" para los valores null de material y color. Pueden utilizarse dos sentencias.
   
