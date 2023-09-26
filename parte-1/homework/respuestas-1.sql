@@ -257,9 +257,34 @@ select sum(venta_en_usd) as venta_total_usd
 from cte2
 
 -- 10. Mostrar en la tabla de ventas el margen de venta por cada linea. Siendo margen = (venta - descuento) - costo expresado en dolares.
-  
+ with cte1 as(
+	
+select ols.order_number, sale, currency, fx_rate_usd_peso, fx_rate_usd_uru, fx_rate_usd_eur, product_cost_usd
+	from stg.monthly_average_fx_rate fx
+	left join stg.order_line_sale ols
+	on date_trunc('month',ols.date) = fx.month
+		left join stg.cost c
+		on c.product_code = ols.product),
+
+cte2 as
+(select order_number, 
+	CASE WHEN currency = 'ARS' THEN sale * fx_rate_usd_peso 
+	WHEN currency = 'URU' THEN sale * fx_rate_usd_uru
+	ELSE sale * fx_rate_usd_eur END AS venta_en_usd,
+	product_cost_usd
+	from cte1)
+	
+	select order_number, venta_en_usd - product_cost_usd as margin
+	from cte2
+
 -- 11. Calcular la cantidad de items distintos de cada subsubcategoria que se llevan por numero de orden.
-  
+select order_number, subsubcategory, count(distinct product)
+from stg.order_line_sale ols
+left join stg.product_master pm
+on ols.product = pm.product_code
+group by 1,2
+order by count desc
+
 
 -- ## Semana 2 - Parte B
 
