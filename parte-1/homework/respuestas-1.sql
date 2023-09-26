@@ -206,6 +206,7 @@ FROM stg.super_store_count ssc
 LEFT JOIN stg.store_master ssm
 ON ssc.store_id = ssm.store_id
 GROUP BY ssc.store_id
+	
 -- 6. Cual es el nivel de inventario promedio en cada mes a nivel de codigo de producto y tienda; mostrar el resultado con el nombre de la tienda.
 CREATE VIEW entrada_de_personas_2 as
 
@@ -214,8 +215,15 @@ FROM stg.super_store_count ssc
 LEFT JOIN stg.store_master ssm
 ON ssc.store_id = ssm.store_id
 GROUP BY ssc.store_id, 2  
+
 -- 7. Calcular la cantidad de unidades vendidas por material. Para los productos que no tengan material usar 'Unknown', homogeneizar los textos si es necesario.
-  
+select store_id
+	, SUM(CASE WHEN DATE BETWEEN '2022-01-01' AND '2022-01-31' THEN INITIAL END)	
+	, COUNT(CASE WHEN DATE BETWEEN '2022-01-01' AND '2022-01-31' THEN INITIAL END) 
+	, SUM(CASE WHEN DATE BETWEEN '2022-01-01' AND '2022-01-31' THEN INITIAL END)/ COUNT(CASE WHEN DATE BETWEEN '2022-01-01' AND '2022-01-31' THEN INITIAL END) as inv_inicial_promedio
+from stg.inventory
+group by store_id  
+
 -- 8. Mostrar la tabla order_line_sales agregando una columna que represente el valor de venta bruta en cada linea convertido a dolares usando la tabla de tipo de cambio.
   
 -- 9. Calcular cantidad de ventas totales de la empresa en dolares.
