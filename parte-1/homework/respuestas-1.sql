@@ -307,13 +307,38 @@ SET color = 'N/A'
 WHERE color is null
 
 -- 3. Hacer un update a la tabla del punto anterior, actualizando la columa "is_active", desactivando todos los productos en la subsubcategoria "Control Remoto".
-  
+UPDATE bkp.bkp_product_master_20230926
+SET is_active = false
+WHERE subsubcategory = 'Control remoto'  
+
 -- 4. Agregar una nueva columna a la tabla anterior llamada "is_local" indicando los productos producidos en Argentina y fuera de Argentina.
-  
+alter table bkp.bkp_product_master_20230926
+	add is_local boolean
+	
+update bkp.bkp_product_master_20230926
+set is_local = case when origin = 'Argentina' then true else false end
+
 -- 5. Agregar una nueva columna a la tabla de ventas llamada "line_key" que resulte ser la concatenacion de el numero de orden y el codigo de producto.
-  
+  alter table stg.order_line_sale
+	add line_key VARCHAR
+	
+update stg.order_line_sale
+set line_key = order_number||'-'||product
+
 -- 6. Crear una tabla llamada "employees" (por el momento vacia) que tenga un id (creado de forma incremental), name, surname, start_date, end_name, phone, country, province, store_id, position. Decidir cual es el tipo de dato mas acorde.
-  
+  CREATE TABLE employees (
+	id SERIAL not null PRIMARY KEY,
+	name VARCHAR(255) NOT NULL,
+	surname VARCHAR(255) NOT NULL,
+	start_date DATE NOT NULL, 
+	end_date DATE,
+	phone VARCHAR(20),
+	country VARCHAR(100),
+	province VARCHAR(100),
+	store_id INT not null,
+	position VARCHAR(100) NOT NULL
+	)
+
 -- 7. Insertar nuevos valores a la tabla "employees" para los siguientes 4 empleados:
     -- Juan Perez, 2022-01-01, telefono +541113869867, Argentina, Santa Fe, tienda 2, Vendedor.
     -- Catalina Garcia, 2022-03-01, Argentina, Buenos Aires, tienda 2, Representante Comercial
