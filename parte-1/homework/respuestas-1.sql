@@ -225,9 +225,37 @@ from stg.inventory
 group by store_id  
 
 -- 8. Mostrar la tabla order_line_sales agregando una columna que represente el valor de venta bruta en cada linea convertido a dolares usando la tabla de tipo de cambio.
-  
+  with cte1 as
+
+(select order_number, sale, currency, fx_rate_usd_peso, fx_rate_usd_uru, fx_rate_usd_eur
+	from stg.order_line_sale ols
+	left join stg.monthly_average_fx_rate fx
+		on date_trunc('month',ols.date) = fx.month)
+		
+select order_number,
+	CASE WHEN currency = 'ARS' THEN sale * fx_rate_usd_peso
+	WHEN currency = 'URU' THEN sale * fx_rate_usd_uru
+	ELSE sale * fx_rate_usd_eur END AS venta_en_usd
+FROM cte1
+
 -- 9. Calcular cantidad de ventas totales de la empresa en dolares.
-  
+  with cte1 as
+
+(select order_number, sale, currency, fx_rate_usd_peso, fx_rate_usd_uru, fx_rate_usd_eur
+	from stg.order_line_sale ols
+	left join stg.monthly_average_fx_rate fx
+		on date_trunc('month',ols.date) = fx.month),
+		
+cte2 as
+(select order_number,
+	CASE WHEN currency = 'ARS' THEN sale * fx_rate_usd_peso
+	WHEN currency = 'URU' THEN sale * fx_rate_usd_uru
+	ELSE sale * fx_rate_usd_eur END AS venta_en_usd
+FROM cte1)
+
+select sum(venta_en_usd) as venta_total_usd
+from cte2
+
 -- 10. Mostrar en la tabla de ventas el margen de venta por cada linea. Siendo margen = (venta - descuento) - costo expresado en dolares.
   
 -- 11. Calcular la cantidad de items distintos de cada subsubcategoria que se llevan por numero de orden.
