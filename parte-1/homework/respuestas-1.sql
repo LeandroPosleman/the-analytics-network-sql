@@ -345,7 +345,29 @@ set line_key = order_number||'-'||product
     -- Ana Valdez, desde 2020-02-21 hasta 2022-03-01, España, Madrid, tienda 8, Jefe Logistica
     -- Fernando Moralez, 2022-04-04, España, Valencia, tienda 9, Vendedor.
 
+INSERT INTO employees (name, surname, start_date, phone, country, province, store_id, position)
+VALUES('Juan', 'Perez', '2022-01-01','+541113869867', 'Argentina', 'Santa Fe', 2, 'Vendedor')
+
+INSERT INTO employees (name, surname, start_date, phone, country, province, store_id, position)
+VALUES('Catalina', 'Garcia', '2022-03-01','','Argentina', 'Buenos Aires', 2, 'Representante Comercial')
+
+INSERT INTO employees (name, surname, start_date,end_date, country, province, store_id, position)
+VALUES('Ana', 'Valdez', '2020-02-21','2022-03-01', 'España', ' Madrid', 8, 'Jefe Logistica')
+
+INSERT INTO employees (name, surname, start_date, country, province, store_id, position)
+VALUES('Fernando', 'Moralez','2022-04-04', 'España', ' Valencia', 9, 'Vendedor')
   
 -- 8. Crear un backup de la tabla "cost" agregandole una columna que se llame "last_updated_ts" que sea el momento exacto en el cual estemos realizando el backup en formato datetime.
-  
+CREATE TABLE cost_backup AS
+SELECT *, now() as last_updated_ts
+FROM stg.cost  
 -- 9. En caso de hacer un cambio que deba revertirse en la tabla "order_line_sale" y debemos volver la tabla a su estado original, como lo harias?
+CREATE TABLE bkp.bkp_order_line_sale_20230926 AS
+SELECT *
+FROM stg.order_line_sale
+
+DROP TABLE IF EXISTS stg.order_line_sale
+
+CREATE TABLE stg.order_line_sale AS
+SELECT *
+FROM bkp.bkp_order_line_sale_20230926
