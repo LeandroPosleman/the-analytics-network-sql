@@ -267,25 +267,30 @@ select sum(venta_en_usd) as venta_total_usd
 from cte2
 
 -- 10. Mostrar en la tabla de ventas el margen de venta por cada linea. Siendo margen = (venta - descuento) - costo expresado en dolares.
- with cte1 as(
-	
-select ols.order_number, sale, currency, fx_rate_usd_peso, fx_rate_usd_uru, fx_rate_usd_eur, product_cost_usd
-	from stg.monthly_average_fx_rate fx
-	left join stg.order_line_sale ols
-	on date_trunc('month',ols.date) = fx.month
-		left join stg.cost c
-		on c.product_code = ols.product),
+with cte1 as
 
-cte2 as
-(select order_number, 
-	CASE WHEN currency = 'ARS' THEN sale/fx_rate_usd_peso 
-	WHEN currency = 'URU' THEN sale/fx_rate_usd_uru
-	ELSE sale/fx_rate_usd_eur END AS venta_en_usd,
-	product_cost_usd
-	from cte1)
-	
-	select order_number, venta_en_usd - product_cost_usd as margin
-	from cte2
+	(select ols.order_number, sale, coalesce(promotion,0) as promotion, currency, product_cost_usd,
+		CASE
+		  WHEN currency = 'EUR' THEN sale/fx_rate_usd_eur
+		  WHEN currency = 'ARS' THEN sale/fx_rate_usd_peso
+		  WHEN currency = 'URU' THEN sale/fx_rate_usd_URU
+		  ELSE sale END AS venta_en_usd,
+		CASE
+		  WHEN promotion IS NULL THEN 0
+		  WHEN currency = 'EUR' THEN promotion/fx_rate_usd_eur
+		  WHEN currency = 'ARS' THEN promotion/fx_rate_usd_peso
+		  WHEN currency = 'URU' THEN promotion/fx_rate_usd_URU
+		  ELSE promotion
+		  END AS desc_en_usd,
+		  (product_cost_usd*quantity) as costo_linea
+
+		from stg.monthly_average_fx_rate fx
+		left join stg.order_line_sale ols
+		on date_trunc('month',ols.date) = fx.month
+			left join stg.cost c
+			on c.product_code = ols.product)
+SELECT *,(venta_en_usd - desc_en_usd - costo_linea) as margen_de_venta
+from cte1
 
 -- 11. Calcular la cantidad de items distintos de cada subsubcategoria que se llevan por numero de orden.
 select order_number, subsubcategory, count(distinct product)
