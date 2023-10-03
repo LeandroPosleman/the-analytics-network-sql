@@ -226,31 +226,41 @@ group by store_id
 
 -- 8. Mostrar la tabla order_line_sales agregando una columna que represente el valor de venta bruta en cada linea convertido a dolares usando la tabla de tipo de cambio.
   with cte1 as
-
 (select order_number, sale, currency, fx_rate_usd_peso, fx_rate_usd_uru, fx_rate_usd_eur
 	from stg.order_line_sale ols
 	left join stg.monthly_average_fx_rate fx
-		on date_trunc('month',ols.date) = fx.month)
-		
+		on date_trunc('month',ols.date) = fx.month)		
 select order_number,
 	CASE WHEN currency = 'ARS' THEN sale/fx_rate_usd_peso
 	WHEN currency = 'URU' THEN sale/fx_rate_usd_uru
 	ELSE sale/fx_rate_usd_eur END AS venta_en_usd
 FROM cte1
+-------------------------ALTERNATIVA---------------------------
+	
+	select os.*,
+	case when os.currency = 'ARS' then os.sale/fx.fx_rate_usd_peso
+	when os.currency = 'EUR' then os.sale/fx.fx_rate_usd_eur
+	when os.currency = 'URU' then os.sale/fx.fx_rate_usd_uru
+	else os.sale
+	end as ventas_usd
+from stg.order_line_sale as os
+left join stg.monthly_average_fx_rate as fx
+on date_trunc('month',os.date) = fx.month
 
 -- 9. Calcular cantidad de ventas totales de la empresa en dolares.
- with cte1 as
-
+with cte1 as
 (select order_number, sale, currency, fx_rate_usd_peso, fx_rate_usd_uru, fx_rate_usd_eur
 	from stg.order_line_sale ols
 	left join stg.monthly_average_fx_rate fx
-		on date_trunc('month',ols.date) = fx.month),
-		
+		on date_trunc('month',ols.date) = fx.month),		
 cte2 as
 (select order_number,
-	CASE WHEN currency = 'ARS' THEN sale/fx_rate_usd_peso
-	WHEN currency = 'URU' THEN sale/fx_rate_usd_uru
-	ELSE sale/fx_rate_usd_eur END AS venta_en_usd
+	CASE 
+ 		WHEN currency = 'ARS' THEN sale/fx_rate_usd_peso
+		WHEN currency = 'URU' THEN sale/fx_rate_usd_uru
+ 		WHEN currency = 'EUR' THEN sale/fx_rate_usd_eur
+		ELSE sale 
+ 		END AS venta_en_usd
 FROM cte1)
 
 select sum(venta_en_usd) as venta_total_usd
