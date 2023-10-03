@@ -145,11 +145,10 @@ group by 1,2
 order by sum desc
 
 -- 13. Cual es el precio promedio de venta de cada producto en las distintas monedas? Recorda que los valores de venta, impuesto, descuentos y creditos es por el total de la linea.
-with cte1 as(
-	
-select product, currency, sum(sale) as venta, count(product) as cuenta
+select product, currency, sum(sale)/sum(quantity) as avg_price
 from stg.order_line_sale
-group by 1,2)
+group by product, currency
+order by product
 
 select product, currency, venta/cuenta as precio_promedio
 from cte1
