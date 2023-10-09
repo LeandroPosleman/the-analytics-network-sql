@@ -91,7 +91,54 @@ select category, sum(venta_en_usd - coalesce(promotion_en_usd,0) - costo_linea) 
 from cte1
 group by category
 -- - ROI por categoria de producto. ROI = ventas netas / Valor promedio de inventario (USD)
+with inventory_usd as(
 
+	SELECT 1=1
+		,	date_trunc('month',i.date) as año_mes
+		,   pm.category
+		,	sum(c.product_cost_usd * (i.initial+i.final)/2) as costo_inv_prom
+	from stg.inventory i
+	left join stg.cost c
+	on i.item_id = c.product_code
+		left join stg.product_master pm 
+		on pm.product_code=c.product_code
+	group by date_trunc('month',i.date),pm.category
+	order by date_trunc('month',i.date)),
+
+order_line_sale_usd as(
+
+SELECT 1=1
+ 	,	date_trunc('month',os.date)as año_mes
+ 	,	category
+  	,	sum(CASE
+	      WHEN currency = 'EUR' THEN sale/fx_rate_usd_eur
+          WHEN currency = 'ARS' THEN sale/fx_rate_usd_peso
+	      WHEN currency = 'URU' THEN sale/fx_rate_usd_URU
+	      ELSE sale
+	  END) AS ventas_en_dolares
+ 	,	sum(CASE
+	      WHEN os.promotion IS NULL THEN 0
+	      WHEN currency = 'EUR' THEN os.promotion/fx_rate_usd_eur
+	      WHEN currency = 'ARS' THEN os.promotion/fx_rate_usd_peso
+	      WHEN currency = 'URU' THEN os.promotion/fx_rate_usd_URU
+	      ELSE os.promotion
+	  END )AS descuento_en_dolares
+	 ,	sum(c.product_cost_usd*os.quantity)as costo_linea
+ 	from stg.order_line_sale os
+left join stg.monthly_average_fx_rate mr on date_trunc('month',mr.month)::date=date_trunc('month', os.date)::date
+left join stg.cost c on c.product_code=os.product
+left join stg.product_master pm on pm.product_code=os.product
+group by date_trunc('month',os.date),category)
+	
+select 
+		olsus.año_mes
+	,	olsus.category
+	,	(olsus.Ventas_en_dolares - olsus.Descuento_en_dolares)/(id.costo_inv_prom) as ROI
+from order_line_sale_usd olsus
+left join inventory_usd id 
+	on olsus.año_mes = id.año_mes 
+	and olsus.category = id.category
+group by  olsus.año_mes, olsus.category, roi
 -- - AOV (Average order value), valor promedio de la orden. (USD)
 
 -- Contabilidad (USD)
